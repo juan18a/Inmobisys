@@ -1,7 +1,17 @@
 import React, { useState } from 'react';
+import { Link, usePage } from '@inertiajs/react';
+import { dashboard, login, register } from '@/routes';
+import SearchNav from '../custom/SearchNav'
 
-export default function Navbar() {
+export default function Navbar({
+    canRegister = true,
+}: {
+    canRegister?: boolean;
+}) {
+
     const [menuOpen, setMenuOpen] = useState(false);
+
+    const { auth } = usePage().props;
 
     return (
         <header className="fixed top-0 left-0 right-0 z-50 px-4 md:px-0">
@@ -15,17 +25,16 @@ export default function Navbar() {
                         Ethereal Estate
                     </a>
 
+
+
                     {/* Desktop: search + links + actions */}
                     <div className="hidden md:flex items-center gap-6">
-                        {/* Search */}
-                        <div className="flex items-center bg-surface-container-low rounded-full px-4 py-1.5 gap-2 border border-outline-variant/10">
-                            <span className="material-symbols-outlined text-secondary text-sm">search</span>
-                            <input
-                                className="bg-transparent border-none focus:ring-0 text-sm font-label w-48 text-on-surface outline-none"
-                                placeholder="Search architecture..."
-                                type="text"
-                            />
-                        </div>
+
+
+
+                        <SearchNav></SearchNav>
+
+
 
                         {/* Nav links */}
                         <div className="flex items-center gap-6 font-manrope font-semibold tracking-tight">
@@ -36,12 +45,14 @@ export default function Navbar() {
 
                         {/* Actions */}
                         <div className="flex items-center gap-3">
-                            <button className="bg-secondary text-on-primary px-5 py-2 rounded-full font-headline font-bold text-sm hover:scale-95 active:scale-90 transition-transform">
+
+
+                            <Link href={dashboard()} className="bg-secondary text-on-primary px-5 py-2 rounded-full font-headline font-bold text-sm hover:scale-95 active:scale-90 transition-transform">
                                 List Property
-                            </button>
-                            <button className="material-symbols-outlined text-secondary scale-95 active:scale-90 transition-transform p-2 rounded-full hover:bg-blue-50/50">
+                            </Link>
+                            <Link href={login()} className="material-symbols-outlined text-secondary scale-95 active:scale-90 transition-transform p-2 rounded-full hover:bg-blue-50/50">
                                 account_circle
-                            </button>
+                            </Link>
                         </div>
                     </div>
 
@@ -89,6 +100,6 @@ export default function Navbar() {
                     </div>
                 )}
             </nav>
-        </header>
+        </header >
     );
 }

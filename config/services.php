@@ -14,6 +14,10 @@ return [
     |
     */
 
+    'n8n' => [
+        'key' => env('N8N_API_KEY'),
+    ],
+
     'postmark' => [
         'key' => env('POSTMARK_API_KEY'),
     ],

@@ -74,6 +74,9 @@ class PropertyController extends Controller
  
     public function apiIndex(Request $request): JsonResponse
     {
+    
+             
+        
         $properties = Property::with('images')
             ->whereIn('status', ['available', 'reserved'])
             ->when($request->type,      fn($q, $v) => $q->where('type', $v))
