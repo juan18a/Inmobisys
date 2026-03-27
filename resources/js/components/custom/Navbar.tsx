@@ -47,12 +47,36 @@ export default function Navbar({
                         <div className="flex items-center gap-3">
 
 
-                            <Link href={dashboard()} className="bg-secondary text-on-primary px-5 py-2 rounded-full font-headline font-bold text-sm hover:scale-95 active:scale-90 transition-transform">
-                                Registro
-                            </Link>
-                            <Link href={login()} className="material-symbols-outlined text-secondary scale-95 active:scale-90 transition-transform p-2 rounded-full hover:bg-blue-50/50">
-                                account_circle
-                            </Link>
+                            {auth.user ? (
+
+                                <Link href={dashboard()} className="bg-secondary text-on-primary px-5 py-2 rounded-full font-headline font-bold text-sm hover:scale-95 active:scale-90 transition-transform">
+                                    Dashboard
+                                </Link>
+
+
+                            ) : (<>
+
+                                {canRegister && (
+
+                                    <Link href={register()} className="bg-secondary text-on-primary px-5 py-2 rounded-full font-headline font-bold text-sm hover:scale-95 active:scale-90 transition-transform">
+                                        Registro
+                                    </Link>
+
+                                )}
+
+                                <Link href={login()} className="material-symbols-outlined text-secondary scale-95 active:scale-90 transition-transform p-2 rounded-full hover:bg-blue-50/50">
+                                    account_circle
+                                </Link>
+                            </>)}
+
+
+
+
+
+
+
+
+
                         </div>
                     </div>
 
