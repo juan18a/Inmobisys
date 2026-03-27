@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
+use Illuminate\Support\Facades\Route;
 
 class PropertyController extends Controller
 {
@@ -67,6 +68,8 @@ class PropertyController extends Controller
                 ...$properties->toArray(),
                 'data' => Inertia::merge($properties->items()),
             ],
+
+            'canRegister' => Route::has('register'),
         ]);
     }
 

@@ -38,9 +38,9 @@ export default function Navbar({
 
                         {/* Nav links */}
                         <div className="flex items-center gap-6 font-manrope font-semibold tracking-tight">
-                            <a className="text-blue-900 dark:text-white border-b-2 border-blue-900 pb-1" href="#">Properties</a>
-                            <a className="text-blue-800/60 dark:text-slate-400 hover:text-blue-900 transition-all duration-300" href="#">About Us</a>
-                            <a className="text-blue-800/60 dark:text-slate-400 hover:text-blue-900 transition-all duration-300" href="#">Contact</a>
+                            <a className="text-blue-900 dark:text-white border-b-2 border-blue-900 pb-1" href="#">Propiedades</a>
+                            <a className="text-blue-800/60 dark:text-slate-400 hover:text-blue-900 transition-all duration-300" href="#">Sobre Nosotros</a>
+                            <a className="text-blue-800/60 dark:text-slate-400 hover:text-blue-900 transition-all duration-300" href="#">Contacto</a>
                         </div>
 
                         {/* Actions */}
@@ -48,7 +48,7 @@ export default function Navbar({
 
 
                             <Link href={dashboard()} className="bg-secondary text-on-primary px-5 py-2 rounded-full font-headline font-bold text-sm hover:scale-95 active:scale-90 transition-transform">
-                                List Property
+                                Registro
                             </Link>
                             <Link href={login()} className="material-symbols-outlined text-secondary scale-95 active:scale-90 transition-transform p-2 rounded-full hover:bg-blue-50/50">
                                 account_circle

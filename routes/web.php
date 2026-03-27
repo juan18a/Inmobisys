@@ -4,11 +4,15 @@ use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
 use App\Http\Controllers\PropertyController;
 
-Route::get('/landing', [PropertyController::class, 'landing'])->name('landing');
-
-Route::inertia('/', 'welcome', [
+//Route::get('/landing, [PropertyController::class, 'landing'])->name('landing');
+/*
+Route::inertia('/', 'landing', [
     'canRegister' => Features::enabled(Features::registration()),
 ])->name('home');
+*/
+
+Route::get('/', [PropertyController::class, 'landing'])->name('home');
+
 
 
 
