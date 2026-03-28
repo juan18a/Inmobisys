@@ -21,6 +21,13 @@ return Application::configure(basePath: dirname(__DIR__))
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
         ]);
+
+         // Registra el alias para usarlo como 'n8n.key' en las rutas
+        $middleware->alias([
+            'n8n.key' => \App\Http\Middleware\VerifyN8nApiKey::class,
+        ]);
+
+
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

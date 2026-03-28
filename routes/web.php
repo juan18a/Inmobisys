@@ -33,7 +33,14 @@ Route::middleware(['auth'])->group(function () {
 
 Route::get('/properties/{property}', [PropertyController::class, 'show'])->name('properties.show');
 
-// ─── N8N Chat Agent API ───────────────────────────────────────────────────────
+// ─── Chat Proxy (reenvía a N8N con credenciales server-side) ─────────────────
+//
+// El ChatWidget llama a POST /chat — Laravel agrega api_key y laravel_url
+// antes de reenviar al webhook de N8N. Las keys nunca llegan al browser.
+
+Route::post('/chat', [App\Http\Controllers\ChatProxyController::class, 'send'])->name('chat.send');
+
+
 //
 // Protected by the X-N8N-API-Key header (VerifyN8nApiKey middleware).
 // N8N sends GET /api/properties?type=&operation=&city=&min_price=&max_price=&bedrooms=

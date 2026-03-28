@@ -14,9 +14,16 @@ return [
     |
     */
 
+    // n8n 
     'n8n' => [
-        'key' => env('N8N_API_KEY'),
+        'key'         => env('N8N_API_KEY'),          // Protege /api/properties
+        'webhook_url' => env('N8N_WEBHOOK_URL'),       // URL del webhook de N8N
     ],
+
+    // En .env añade:
+    // N8N_API_KEY=tu-secreto-largo
+    // N8N_WEBHOOK_URL=http://tu-n8n:5678/webhook/ethereal-chat
+    // APP_URL=http://tu-ip-o-dominio:8000
 
     'postmark' => [
         'key' => env('POSTMARK_API_KEY'),

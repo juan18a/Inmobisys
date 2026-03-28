@@ -12,10 +12,10 @@ interface Message {
 // ─── Config ───────────────────────────────────────────────────────────────────
 
 /**
- * Replace with your N8N webhook URL.
- * e.g. https://your-n8n-instance.com/webhook/ethereal-chat
+ * Laravel proxy route — credenciales añadidas server-side.
+ * El browser nunca ve la API key ni la URL de N8N.
  */
-const N8N_WEBHOOK_URL = import.meta.env.VITE_N8N_WEBHOOK_URL ?? '';
+const CHAT_URL = '/chat';
 
 /** Maximum characters a user message may contain. */
 const MAX_INPUT_LENGTH = 500;
@@ -184,9 +184,14 @@ const ChatWidget: React.FC = () => {
 
         // ⑤ Call N8N webhook
         try {
-            const response = await fetch(N8N_WEBHOOK_URL, {
+            const csrfToken = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content ?? '';
+
+            const response = await fetch(CHAT_URL, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                },
                 body: JSON.stringify({
                     message: trimmed,
                     session_id: sessionId.current,
