@@ -9,7 +9,7 @@ interface PropertyCardProps {
 export default function PropertyCard({ property, visible }: PropertyCardProps) {
     // Obtenemos el usuario del estado compartido de Inertia
     const { auth } = usePage().props as any;
-    const isAdmin = auth?.user.role === 'admin';
+    //const isAdmin = auth?.user.role === 'admin';
 
     const handleDelete = (e: React.MouseEvent) => {
         e.preventDefault();
