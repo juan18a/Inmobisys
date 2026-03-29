@@ -38,11 +38,19 @@ export default function PropertyCard({ property, visible }: PropertyCardProps) {
                 className="relative overflow-hidden w-full"
                 style={{ height: property.imageHeight ?? '22rem' }}
             >
-                <img
-                    src={property.img}
-                    alt={property.title}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                />
+
+                <Link
+                    href={route('properties.show', property.slug ?? property.id)}
+                    className="text-secondary hover:text-primary transition-all hover:translate-x-1"
+                >
+
+                    <img
+                        src={property.img}
+                        alt={property.title}
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    />
+
+                </Link>
 
                 {/* Botón de precio flotante */}
                 <div className="absolute top-4 left-4 glass-effect bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20 shadow-lg">
