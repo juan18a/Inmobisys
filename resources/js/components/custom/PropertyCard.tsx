@@ -50,7 +50,7 @@ export default function PropertyCard({ property, visible }: PropertyCardProps) {
                 </div>
 
                 {/* Acciones de administración (solo visibles si estás logueado) */}
-                {isAdmin && (
+                {auth?.user && (
 
 
                     <div className="absolute top-4 right-4 flex gap-2 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
@@ -62,13 +62,19 @@ export default function PropertyCard({ property, visible }: PropertyCardProps) {
                         >
                             <span className="material-symbols-outlined text-[18px]">edit</span>
                         </Link>
-                        <button
-                            onClick={handleDelete}
-                            className="bg-white/90 p-2.5 rounded-full shadow-lg hover:bg-white text-red-600 transition-all hover:scale-110 flex items-center justify-center border border-red-100"
-                            title="Eliminar propiedad"
-                        >
-                            <span className="material-symbols-outlined text-[18px]">delete</span>
-                        </button>
+
+                        {isAdmin && (
+
+                            <Link
+                                onClick={handleDelete}
+                                className="bg-white/90 p-2.5 rounded-full shadow-lg hover:bg-white text-red-600 transition-all hover:scale-110 flex items-center justify-center border border-red-100"
+                                title="Eliminar propiedad">
+                                <span className="material-symbols-outlined text-[18px]">delete</span>
+                            </Link>
+
+
+                        )}
+
                     </div>
                 )}
             </div>
