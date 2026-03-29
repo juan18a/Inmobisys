@@ -1,61 +1,64 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Laravel\Fortify\Features;
 use App\Http\Controllers\PropertyController;
+use App\Http\Controllers\Admin\UserController;
 
-// ─── Public ──────────────────────────────────────────────────────────────────
+// ─── Pública ──────────────────────────────────────────────────────────────────
 
 Route::get('/', [PropertyController::class, 'landing'])->name('home');
 
-// ─── Admin (authenticated) ────────────────────────────────────────────────────
+// ─── Bloquear registro público ────────────────────────────────────────────────
+// Fortify registra sus rutas automáticamente según config/fortify.php.
+// Estas rutas adicionales tapan cualquier GET/POST a /register que
+// pudiera colarse aunque se elimine Features::registration() del config.
 
-Route::middleware(['auth'])->group(function () {
+Route::get('/register',  fn () => abort(404))->name('register');
+Route::post('/register', fn () => abort(404));
+
+// ─── Dashboard ────────────────────────────────────────────────────────────────
+
+Route::middleware(['auth', 'verified'])->group(function () {
     Route::inertia('panel-de-control', 'dashboard')->name('dashboard');
 });
 
-// ─── Properties (public browse + admin CRUD) ─────────────────────────────────
+// ─── Gestión de vendedores (solo admin) ───────────────────────────────────────
+
+Route::middleware(['auth', 'verified', 'role:admin'])
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function () {
+        Route::get('/usuarios',           [UserController::class, 'index'])->name('users.index');
+        Route::get('/usuarios/nuevo',     [UserController::class, 'create'])->name('users.create');
+        Route::post('/usuarios',          [UserController::class, 'store'])->name('users.store');
+        Route::delete('/usuarios/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+    });
+
+// ─── Propiedades ──────────────────────────────────────────────────────────────
 
 Route::get('/properties', [PropertyController::class, 'index'])->name('properties.index');
 
-Route::middleware(['auth'])->group(function () {
-    Route::get('/properties/create',             [PropertyController::class, 'create'])->name('properties.create');
-    Route::post('/properties',                   [PropertyController::class, 'store'])->name('properties.store');
-    Route::get('/properties/{property}/edit',    [PropertyController::class, 'edit'])->name('properties.edit');
+// Crear y editar: admin y seller (cualquier autenticado)
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/properties/create',          [PropertyController::class, 'create'])->name('properties.create');
+    Route::post('/properties',                [PropertyController::class, 'store'])->name('properties.store');
+    Route::get('/properties/{property}/edit', [PropertyController::class, 'edit'])->name('properties.edit');
     Route::match(['put', 'patch'], '/properties/{property}', [PropertyController::class, 'update'])->name('properties.update');
-    Route::delete('/properties/{property}',      [PropertyController::class, 'destroy'])->name('properties.destroy');
+});
 
-    Route::delete(
-        'properties/{property}/images/{image}',
-        [PropertyController::class, 'destroyImage']
-    )->name('properties.images.destroy');
+// Eliminar: solo admin — doble protección (ruta + controller)
+Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
+    Route::delete('/properties/{property}',                [PropertyController::class, 'destroy'])->name('properties.destroy');
+    Route::delete('properties/{property}/images/{image}', [PropertyController::class, 'destroyImage'])->name('properties.images.destroy');
 });
 
 Route::get('/properties/{property}', [PropertyController::class, 'show'])->name('properties.show');
 
-// ─── Chat Proxy (reenvía a N8N con credenciales server-side) ─────────────────
-//
-// El ChatWidget llama a POST /chat — Laravel agrega api_key y laravel_url
-// antes de reenviar al webhook de N8N. Las keys nunca llegan al browser.
+// ─── Chat Proxy ───────────────────────────────────────────────────────────────
 
 Route::post('/chat', [App\Http\Controllers\ChatProxyController::class, 'send'])->name('chat.send');
 
-
-//
-// Protected by the X-N8N-API-Key header (VerifyN8nApiKey middleware).
-// N8N sends GET /api/properties?type=&operation=&city=&min_price=&max_price=&bedrooms=
-// and receives JSON back (PropertyController::apiIndex).
-//
-// Register the middleware alias in app/Http/Kernel.php:
-//   'n8n.key' => \App\Http\Middleware\VerifyN8nApiKey::class,
-//
-// Add to config/services.php:
-//   'n8n' => ['key' => env('N8N_API_KEY')],
-//
-// Add to .env:
-//   N8N_API_KEY=your-long-random-secret-here
-//   LARAVEL_APP_URL=https://yourdomain.com          # used by N8N workflow
-//   VITE_N8N_WEBHOOK_URL=https://your-n8n.com/webhook/ethereal-chat  # used by React
+// ─── API para N8N ─────────────────────────────────────────────────────────────
 
 Route::middleware('n8n.key')->group(function () {
     Route::get('/api/properties', [PropertyController::class, 'apiIndex'])->name('api.properties.index');

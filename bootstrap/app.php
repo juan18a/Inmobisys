@@ -2,6 +2,8 @@
 
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\CheckRole;
+use App\Http\Middleware\ValidateTurnstile;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -22,12 +24,11 @@ return Application::configure(basePath: dirname(__DIR__))
             AddLinkHeadersForPreloadedAssets::class,
         ]);
 
-         // Registra el alias para usarlo como 'n8n.key' en las rutas
         $middleware->alias([
-            'n8n.key' => \App\Http\Middleware\VerifyN8nApiKey::class,
+            'n8n.key'   => \App\Http\Middleware\VerifyN8nApiKey::class,
+            'role'      => CheckRole::class,       // ← NUEVO: permisos por rol
+            'turnstile' => ValidateTurnstile::class, // ← NUEVO: captcha en login
         ]);
-
-
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
