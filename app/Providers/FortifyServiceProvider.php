@@ -62,6 +62,25 @@ class FortifyServiceProvider extends ServiceProvider
             ]);
         });
 
+        Fortify::registerView(fn () => inertia('auth/register'));
+
+        Fortify::verifyEmailView(fn () => inertia('auth/verify-email', [
+            'status' => session('status'),
+        ]));
+
+        Fortify::requestPasswordResetLinkView(fn () => inertia('auth/forgot-password', [
+            'status' => session('status'),
+        ]));
+
+        Fortify::resetPasswordView(fn (Request $request) => inertia('auth/reset-password', [
+            'email' => $request->input('email'),
+            'token' => $request->route('token'),
+        ]));
+
+        Fortify::confirmPasswordView(fn () => inertia('auth/confirm-password'));
+
+        Fortify::twoFactorChallengeView(fn () => inertia('auth/two-factor-challenge'));
+
         // Sin vista de registro — web.php devuelve 404 en esas rutas
     }
 }

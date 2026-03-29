@@ -38,4 +38,13 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->role === 'seller';
     }
+
+    /**
+     * Determina si el usuario ha verificado su email.
+     * Los administradores siempre se consideran verificados.
+     */
+    public function hasVerifiedEmail(): bool
+    {
+        return $this->isAdmin() || parent::hasVerifiedEmail();
+    }
 }
