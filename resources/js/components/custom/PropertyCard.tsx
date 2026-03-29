@@ -50,7 +50,7 @@ export default function PropertyCard({ property, visible }: PropertyCardProps) {
                 </div>
 
                 {/* Acciones de administración (solo visibles si estás logueado) */}
-                {isAdmin && (
+                {auth?.user && (
 
 
                     <div className="absolute top-4 right-4 flex gap-2 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
