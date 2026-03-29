@@ -24,6 +24,15 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
+
+        // ── Sincronizar contraseña del Admin desde el .env ────────────────────
+        if ($adminPassword = env('ADMIN_PASSWORD')) {
+            $admin = \App\Models\User::where('role', 'admin')->first();
+
+            if ($admin && !\Illuminate\Support\Facades\Hash::check($adminPassword, $admin->password)) {
+                $admin->update(['password' => \Illuminate\Support\Facades\Hash::make($adminPassword)]);
+            }
+        }
     }
 
     /**

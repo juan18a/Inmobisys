@@ -28,6 +28,7 @@ export default function Profile({
     status?: string;
 }) {
     const { auth } = usePage().props;
+    const isAdmin = auth.user.role === 'admin';
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -40,7 +41,7 @@ export default function Profile({
                     <Heading
                         variant="small"
                         title="Profile information"
-                        description="Update your name and email address"
+                        description={isAdmin ? "Account managed by system" : "Update your name and email address"}
                     />
 
                     <Form
@@ -63,6 +64,7 @@ export default function Profile({
                                         required
                                         autoComplete="name"
                                         placeholder="Full name"
+                                        disabled={isAdmin}
                                     />
 
                                     <InputError
@@ -83,6 +85,7 @@ export default function Profile({
                                         required
                                         autoComplete="username"
                                         placeholder="Email address"
+                                        disabled={isAdmin}
                                     />
 
                                     <InputError
@@ -118,32 +121,34 @@ export default function Profile({
                                         </div>
                                     )}
 
-                                <div className="flex items-center gap-4">
-                                    <Button
-                                        disabled={processing}
-                                        data-test="update-profile-button"
-                                    >
-                                        Save
-                                    </Button>
+                                {!isAdmin && (
+                                    <div className="flex items-center gap-4">
+                                        <Button
+                                            disabled={processing}
+                                            data-test="update-profile-button"
+                                        >
+                                            Save
+                                        </Button>
 
-                                    <Transition
-                                        show={recentlySuccessful}
-                                        enter="transition ease-in-out"
-                                        enterFrom="opacity-0"
-                                        leave="transition ease-in-out"
-                                        leaveTo="opacity-0"
-                                    >
-                                        <p className="text-sm text-neutral-600">
-                                            Saved
-                                        </p>
-                                    </Transition>
-                                </div>
+                                        <Transition
+                                            show={recentlySuccessful}
+                                            enter="transition ease-in-out"
+                                            enterFrom="opacity-0"
+                                            leave="transition ease-in-out"
+                                            leaveTo="opacity-0"
+                                        >
+                                            <p className="text-sm text-neutral-600">
+                                                Saved
+                                            </p>
+                                        </Transition>
+                                    </div>
+                                )}
                             </>
                         )}
                     </Form>
                 </div>
 
-                <DeleteUser />
+                {!isAdmin && <DeleteUser />}
             </SettingsLayout>
         </AppLayout>
     );
