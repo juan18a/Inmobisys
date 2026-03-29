@@ -8,7 +8,9 @@ class StorePropertyRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true; // Ajusta según tu sistema de autenticación
+        // Solo usuarios autenticados pueden crear propiedades.
+        // (La ruta ya tiene middleware auth, pero es buena práctica confirmarlo aquí.)
+        return auth()->check();
     }
 
     public function rules(): array
@@ -37,9 +39,8 @@ class StorePropertyRequest extends FormRequest
             'features.*'    => ['string'],
             'status'        => ['sometimes', 'in:available,sold,rented,reserved'],
             'is_featured'   => ['sometimes', 'boolean'],
-            // Imágenes
             'images'        => ['sometimes', 'array', 'max:20'],
-            'images.*'      => ['image', 'mimes:jpeg,png,webp,jpg', 'max:5120'], // 5 MB por imagen
+            'images.*'      => ['image', 'mimes:jpeg,png,webp,jpg', 'max:5120'],
             'cover_index'   => ['sometimes', 'integer', 'min:0'],
         ];
     }

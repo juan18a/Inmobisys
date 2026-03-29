@@ -131,7 +131,7 @@ export default function PropertiesIndex({ properties, filters }: Props) {
                                 key={property.id}
                                 property={property}
                                 visible={true}
-                                isAdmin={isAdmin}
+                                //isAdmin={isAdmin}
                             />
                         ))}
                     </div>

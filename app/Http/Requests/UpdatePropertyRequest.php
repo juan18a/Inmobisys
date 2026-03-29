@@ -8,7 +8,16 @@ class UpdatePropertyRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        // Recuperamos la propiedad desde la ruta (model binding).
+        // Admin puede editar cualquiera; seller solo las suyas.
+        $property = $this->route('property');
+        $user     = $this->user();
+
+        if (! $user || ! $property) {
+            return false;
+        }
+
+        return $property->canBeEditedBy($user);
     }
 
     public function rules(): array
@@ -37,13 +46,10 @@ class UpdatePropertyRequest extends FormRequest
             'features.*'        => ['string'],
             'status'            => ['sometimes', 'in:available,sold,rented,reserved'],
             'is_featured'       => ['sometimes', 'boolean'],
-            // Nuevas imágenes
             'images'            => ['sometimes', 'array'],
             'images.*'          => ['image', 'mimes:jpeg,png,webp,jpg', 'max:5120'],
-            // IDs de imágenes a eliminar
             'delete_images'     => ['sometimes', 'array'],
             'delete_images.*'   => ['integer', 'exists:property_images,id'],
-            // Índice (en nuevas) o ID (existente) que será la portada
             'cover_image_id'    => ['sometimes', 'nullable', 'integer', 'exists:property_images,id'],
         ];
     }

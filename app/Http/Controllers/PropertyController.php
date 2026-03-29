@@ -20,10 +20,9 @@ class PropertyController extends Controller
 
     public function index(Request $request): Response
     {
-        // Tanto admin como seller ven el dashboard con todos los estados.
-        // Solo los no autenticados ven la galería pública.
-        $isAuthenticated = auth()->check();
-        $isAdmin         = auth()->user()?->isAdmin() ?? false;
+        $user            = auth()->user();
+        $isAuthenticated = $user !== null;
+        $isAdmin         = $user?->isAdmin() ?? false;
 
         $properties = Property::with('images')
             ->when($request->search, fn ($q, $v) =>
@@ -41,6 +40,11 @@ class PropertyController extends Controller
             ->when(
                 ! $isAuthenticated,
                 fn ($q) => $q->whereIn('status', ['available', 'reserved'])
+            )
+            // ── NUEVO: sellers solo ven sus propias propiedades ──────────────
+            ->when(
+                $isAuthenticated && ! $isAdmin,
+                fn ($q) => $q->where('user_id', $user->id)
             )
             ->latest()
             ->paginate($isAuthenticated ? 12 : 6)
@@ -73,7 +77,6 @@ class PropertyController extends Controller
                 ...$properties->toArray(),
                 'data' => Inertia::merge($properties->items()),
             ],
-            // El registro está deshabilitado; siempre false
             'canRegister' => false,
         ]);
     }
@@ -115,7 +118,8 @@ class PropertyController extends Controller
     {
         DB::transaction(function () use ($request) {
             $data = $request->validated();
-            $data['slug'] = $this->uniqueSlug($data['title']);
+            $data['slug']    = $this->uniqueSlug($data['title']);
+            $data['user_id'] = auth()->id(); // ← NUEVO: asignar propietario
 
             unset($data['images'], $data['cover_index']);
 
@@ -150,6 +154,9 @@ class PropertyController extends Controller
 
     public function edit(Property $property): Response
     {
+        // ── NUEVO: verificar que el seller sea el dueño ──────────────────────
+        $this->authorizeProperty($property);
+
         $property->load('images');
 
         return Inertia::render('Properties/Edit', [
@@ -161,6 +168,9 @@ class PropertyController extends Controller
 
     public function update(UpdatePropertyRequest $request, Property $property): \Illuminate\Http\RedirectResponse
     {
+        // ── NUEVO: verificar que el seller sea el dueño ──────────────────────
+        $this->authorizeProperty($property);
+
         DB::transaction(function () use ($request, $property) {
             $data = $request->validated();
 
@@ -210,8 +220,7 @@ class PropertyController extends Controller
 
     public function destroy(Property $property): \Illuminate\Http\RedirectResponse
     {
-        // Segunda capa de defensa: aunque la ruta ya tiene middleware 'role:admin',
-        // verificamos aquí también por si se llama desde otro lado.
+        // La ruta ya tiene middleware 'role:admin'; doble verificación aquí también.
         abort_unless(auth()->user()?->isAdmin(), 403, 'Solo el administrador puede eliminar propiedades.');
 
         DB::transaction(function () use ($property) {
@@ -231,7 +240,6 @@ class PropertyController extends Controller
 
     public function destroyImage(Property $property, PropertyImage $image): JsonResponse
     {
-        // Ruta protegida con role:admin; doble verificación aquí también
         abort_unless(auth()->user()?->isAdmin(), 403);
         abort_unless($image->property_id === $property->id, 403);
 
@@ -252,6 +260,21 @@ class PropertyController extends Controller
     }
 
     // ── Private helpers ────────────────────────────────────────────────────────
+
+    /**
+     * Verifica que el usuario autenticado tenga permiso para modificar
+     * esta propiedad. Admin puede todo; seller solo sus propias propiedades.
+     */
+    private function authorizeProperty(Property $property): void
+    {
+        $user = auth()->user();
+
+        abort_unless(
+            $property->canBeEditedBy($user),
+            403,
+            'No tienes permiso para modificar esta propiedad.'
+        );
+    }
 
     private function storeImages(Property $property, array $files, int $coverIndex = 0): void
     {
@@ -300,6 +323,7 @@ class PropertyController extends Controller
     {
         return [
             'id'              => $property->id,
+            'user_id'         => $property->user_id,   // ← NUEVO: expuesto al frontend
             'title'           => $property->title,
             'slug'            => $property->slug,
             'description'     => $property->description,

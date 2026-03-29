@@ -23,6 +23,7 @@ export interface PropertyImage {
 export interface PropertyData {
     // Campos del backend
     id?: number;
+    user_id?: number;           // ← NUEVO: ID del vendedor propietario
     slug?: string;
     description?: string;
     type?: PropertyType;
@@ -31,6 +32,7 @@ export interface PropertyData {
     formatted_price?: string;
     currency?: string;
     address?: string;
+    city?: string;
     state?: string;
     country?: string;
     zip_code?: string;

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
@@ -13,6 +14,7 @@ class Property extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'user_id',          // ← NUEVO: vendedor propietario
         'title',
         'slug',
         'description',
@@ -59,6 +61,25 @@ class Property extends Model
     public function images(): HasMany
     {
         return $this->hasMany(PropertyImage::class)->orderBy('sort_order');
+    }
+
+    /**
+     * El vendedor que creó esta propiedad.
+     */
+    public function owner(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    // ── Helpers de autorización ────────────────────────────────────────────────
+
+    /**
+     * Devuelve true si el usuario dado puede editar esta propiedad.
+     * Admin puede editar cualquiera; seller solo las suyas.
+     */
+    public function canBeEditedBy(User $user): bool
+    {
+        return $user->isAdmin() || $this->user_id === $user->id;
     }
 
     // ── Accessors ──────────────────────────────────────────────────────────────
@@ -108,5 +129,18 @@ class Property extends Model
     public function scopeByOperation($query, string $operation)
     {
         return $query->where('operation', $operation);
+    }
+
+    /**
+     * Scope: propiedades visibles para un usuario dado.
+     * Admin ve todas; seller solo las suyas.
+     */
+    public function scopeVisibleFor($query, User $user)
+    {
+        if ($user->isAdmin()) {
+            return $query;
+        }
+
+        return $query->where('user_id', $user->id);
     }
 }

@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Property;
 use App\Models\PropertyImage;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
@@ -13,6 +14,15 @@ class PropertySeeder extends Seeder
 {
     public function run(): void
     {
+        // ── NUEVO: asignar las propiedades de seed al primer admin disponible ──
+        // Si no existe ningún admin, las propiedades quedan sin dueño (user_id null)
+        // y solo el admin podrá gestionarlas desde el panel.
+        $admin = User::where('role', 'admin')->first();
+
+        if (! $admin) {
+            $this->command->warn('⚠️  No se encontró ningún admin. Las propiedades se crearán con user_id = null.');
+        }
+
         $properties = [
             [
                 'title'         => 'Villa Obsidiana',
@@ -247,6 +257,9 @@ class PropertySeeder extends Seeder
         ];
 
         foreach ($properties as $data) {
+            // ── NUEVO: asignar user_id del admin ──────────────────────────────
+            $data['user_id'] = $admin?->id;
+
             // Generar slug único
             $data['slug'] = Str::slug($data['title']);
             $slug  = $data['slug'];

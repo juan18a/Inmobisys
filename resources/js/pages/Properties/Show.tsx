@@ -22,6 +22,10 @@ export default function PropertyShow({ property }) {
     const isLogged = !! auth?.user;
     const isAdmin  = auth?.user?.role === 'admin';
 
+    // ── NUEVO: seller solo puede editar sus propias propiedades ───────────────
+    const canEdit   = isAdmin || (isLogged && auth.user?.id === property.user_id);
+    const canDelete = isAdmin;
+
     function handleDelete() {
         if (! confirm('¿Eliminar esta propiedad? Esta acción no se puede deshacer.')) return;
         router.delete(route('properties.destroy', property.slug ?? property.id));
@@ -48,16 +52,18 @@ export default function PropertyShow({ property }) {
                     <div className="flex items-center gap-2">
                         {isLogged ? (
                             <>
-                                {/* Editar: admin y seller */}
-                                <Link
-                                    href={route('properties.edit', property.slug ?? property.id)}
-                                    className="inline-flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 rounded-lg text-sm transition-colors"
-                                >
-                                    Editar
-                                </Link>
+                                {/* Editar: admin o dueño de la propiedad */}
+                                {canEdit && (
+                                    <Link
+                                        href={route('properties.edit', property.slug ?? property.id)}
+                                        className="inline-flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 rounded-lg text-sm transition-colors"
+                                    >
+                                        Editar
+                                    </Link>
+                                )}
 
                                 {/* Eliminar: solo admin */}
-                                {isAdmin && (
+                                {canDelete && (
                                     <button
                                         onClick={handleDelete}
                                         className="inline-flex items-center gap-1.5 border border-red-300 text-red-600 hover:bg-red-50 font-semibold px-4 py-2 rounded-lg text-sm transition-colors"

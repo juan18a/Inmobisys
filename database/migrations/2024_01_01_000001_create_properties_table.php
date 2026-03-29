@@ -10,6 +10,11 @@ return new class extends Migration
     {
         Schema::create('properties', function (Blueprint $table) {
             $table->id();
+            // ── NUEVO: vendedor propietario ────────────────────────────────────
+            $table->foreignId('user_id')
+                  ->nullable()
+                  ->constrained('users')
+                  ->nullOnDelete();
             $table->string('title');
             $table->string('slug')->unique();
             $table->text('description');
