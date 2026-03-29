@@ -19,6 +19,10 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
      */
     public function update(User $user, array $input): void
     {
+        if ($user->isAdmin()) {
+            abort(403, 'El perfil del administrador solo puede ser modificado a través del sistema.');
+        }
+
         Validator::make($input, [
             ...$this->profileRules($user->id),
         ])->validateWithBag('updateProfileInformation');

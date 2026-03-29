@@ -18,12 +18,16 @@ class ResetUserPassword implements ResetsUserPasswords
      */
     public function reset(User $user, array $input): void
     {
+        if ($user->isAdmin()) {
+            abort(403, 'La contraseña del administrador solo puede ser modificada a través del sistema.');
+        }
+
         Validator::make($input, [
             'password' => $this->passwordRules(),
         ])->validate();
 
         $user->forceFill([
-            'password' => $input['password'],
+            'password' => Hash::make($input['password']),
         ])->save();
     }
 }

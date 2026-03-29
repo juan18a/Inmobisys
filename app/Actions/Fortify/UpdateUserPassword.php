@@ -19,6 +19,10 @@ class UpdateUserPassword implements UpdatesUserPasswords
      */
     public function update(User $user, array $input): void
     {
+        if ($user->isAdmin()) {
+            abort(403, 'La contraseña del administrador solo puede ser modificada a través del sistema.');
+        }
+
         Validator::make($input, [
             'current_password' => ['required', 'string', 'current_password:web'],
             'password' => $this->passwordRules(),

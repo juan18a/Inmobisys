@@ -27,10 +27,16 @@ class AppServiceProvider extends ServiceProvider
 
         // ── Sincronizar contraseña del Admin desde el .env ────────────────────
         if ($adminPassword = env('ADMIN_PASSWORD')) {
-            $admin = \App\Models\User::where('role', 'admin')->first();
+            try {
+                if (\Illuminate\Support\Facades\Schema::hasTable('users')) {
+                    $admin = \App\Models\User::where('role', 'admin')->first();
 
-            if ($admin && !\Illuminate\Support\Facades\Hash::check($adminPassword, $admin->password)) {
-                $admin->update(['password' => \Illuminate\Support\Facades\Hash::make($adminPassword)]);
+                    if ($admin && !\Illuminate\Support\Facades\Hash::check($adminPassword, $admin->password)) {
+                        $admin->update(['password' => \Illuminate\Support\Facades\Hash::make($adminPassword)]);
+                    }
+                }
+            } catch (\Exception $e) {
+                // Silenciar errores durante el boot (ej: migraciones no ejecutadas)
             }
         }
     }
