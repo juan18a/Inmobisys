@@ -9,6 +9,7 @@ interface PropertyCardProps {
 export default function PropertyCard({ property, visible }: PropertyCardProps) {
     // Obtenemos el usuario del estado compartido de Inertia
     const { auth } = usePage().props as any;
+    const isAdmin = auth?.user.role === 'admin';
 
     const handleDelete = (e: React.MouseEvent) => {
         e.preventDefault();
@@ -42,14 +43,16 @@ export default function PropertyCard({ property, visible }: PropertyCardProps) {
                     alt={property.title}
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                 />
-                
+
                 {/* Botón de precio flotante */}
                 <div className="absolute top-4 left-4 glass-effect bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20 shadow-lg">
                     <span className="font-headline font-bold text-secondary text-sm">{property.price}</span>
                 </div>
 
                 {/* Acciones de administración (solo visibles si estás logueado) */}
-                {auth?.user && (
+                {isAdmin && (
+
+
                     <div className="absolute top-4 right-4 flex gap-2 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
                         <Link
                             href={route('properties.edit', property.slug ?? property.id)}
@@ -71,7 +74,7 @@ export default function PropertyCard({ property, visible }: PropertyCardProps) {
             </div>
 
             <div className="p-7 flex flex-col flex-1 bg-white">
-                <Link 
+                <Link
                     href={route('properties.show', property.slug ?? property.id)}
                     className="block group-hover:text-primary transition-colors"
                 >
@@ -79,12 +82,12 @@ export default function PropertyCard({ property, visible }: PropertyCardProps) {
                         {property.title}
                     </h3>
                 </Link>
-                
+
                 <p className="text-sm text-on-surface-variant/70 line-clamp-1 mb-6 flex items-center gap-1.5">
                     <span className="material-symbols-outlined text-[16px] opacity-60">location_on</span>
                     {property.location}
                 </p>
-                
+
                 <div className="flex justify-between items-center mt-auto pt-6 border-t border-outline-variant/10">
                     <div className="flex gap-4">
                         <span className="font-label text-[10px] tracking-[0.15em] text-secondary/60 font-bold uppercase flex items-center gap-1.5">
@@ -100,12 +103,12 @@ export default function PropertyCard({ property, visible }: PropertyCardProps) {
                             {property.sqft}
                         </span>
                     </div>
-                    
-                    <Link 
+
+                    <Link
                         href={route('properties.show', property.slug ?? property.id)}
                         className="text-secondary hover:text-primary transition-all hover:translate-x-1"
                     >
-                         <span className="material-symbols-outlined text-[20px]">arrow_forward</span>
+                        <span className="material-symbols-outlined text-[20px]">arrow_forward</span>
                     </Link>
                 </div>
             </div>
