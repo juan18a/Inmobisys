@@ -25,10 +25,13 @@ class PropertyController extends Controller
         $isAdmin         = $user?->isAdmin() ?? false;
 
         $properties = Property::with('images')
+            // Agrupado con where() para que el OR no rompa los demás filtros
             ->when($request->search, fn ($q, $v) =>
-                $q->where('title', 'like', "%{$v}%")
-                  ->orWhere('address', 'like', "%{$v}%")
-                  ->orWhere('city', 'like', "%{$v}%")
+                $q->where(fn ($inner) =>
+                    $inner->where('title', 'like', "%{$v}%")
+                          ->orWhere('address', 'like', "%{$v}%")
+                          ->orWhere('city', 'like', "%{$v}%")
+                )
             )
             ->when($request->type,      fn ($q, $v) => $q->where('type', $v))
             ->when($request->operation, fn ($q, $v) => $q->where('operation', $v))
