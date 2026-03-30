@@ -9,6 +9,7 @@ use App\Models\PropertyImage;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -30,50 +31,57 @@ class PropertyController extends Controller
         $operation = $request->operation;
         $status    = $request->status;
 
-        if ($search) {
-            // ── Búsqueda con Scout ────────────────────────────────────────────
-            // Scout devuelve los IDs que coinciden; luego hacemos la query
-            // Eloquent real con esos IDs para aplicar filtros y eager loads.
-            // Esto evita el error 500 de llamar through() sobre el paginador de Scout.
-            $matchingIds = Property::search($search)->keys();
+        // Closure reutilizable — aplica todos los filtros Eloquent
+        $applyFilters = function ($query) use (
+            $isAuthenticated, $isAdmin, $user, $type, $operation, $status
+        ) {
+            return $query
+                ->with('images')
+                ->when($type,      fn ($q, $v) => $q->where('type', $v))
+                ->when($operation, fn ($q, $v) => $q->where('operation', $v))
+                ->when(
+                    $isAuthenticated && $status,
+                    fn ($q, $v) => $q->where('status', $v)
+                )
+                ->when(
+                    ! $isAuthenticated,
+                    fn ($q) => $q->whereIn('status', ['available', 'reserved'])
+                )
+                ->when(
+                    $isAuthenticated && ! $isAdmin,
+                    fn ($q) => $q->where('user_id', $user->id)
+                )
+                ->latest();
+        };
 
-            $properties = Property::with('images')
-                ->whereIn('id', $matchingIds)
-                ->when($type,      fn ($q, $v) => $q->where('type', $v))
-                ->when($operation, fn ($q, $v) => $q->where('operation', $v))
-                ->when(
-                    $isAuthenticated && $status,
-                    fn ($q, $v) => $q->where('status', $v)
-                )
-                ->when(
-                    ! $isAuthenticated,
-                    fn ($q) => $q->whereIn('status', ['available', 'reserved'])
-                )
-                ->when(
-                    $isAuthenticated && ! $isAdmin,
-                    fn ($q) => $q->where('user_id', $user->id)
-                )
-                ->latest()
-                ->paginate($perPage)
-                ->withQueryString()
-                ->through(fn ($p) => $this->formatProperty($p));
+        if ($search) {
+            try {
+                // Typesense devuelve IDs → Eloquent aplica filtros y pagina
+                $matchingIds = Property::search($search)->keys();
+
+                $properties = $applyFilters(Property::query())
+                    ->whereIn('id', $matchingIds)
+                    ->paginate($perPage)
+                    ->withQueryString()
+                    ->through(fn ($p) => $this->formatProperty($p));
+
+            } catch (\Throwable $e) {
+                // Typesense no disponible (ej: red Dokploy no configurada)
+                // → fallback a LIKE para no dar 500
+                Log::warning('Typesense unavailable, using LIKE fallback: ' . $e->getMessage());
+
+                $properties = $applyFilters(Property::query())
+                    ->where(fn ($q) =>
+                        $q->where('title',   'like', "%{$search}%")
+                          ->orWhere('city',    'like', "%{$search}%")
+                          ->orWhere('address', 'like', "%{$search}%")
+                    )
+                    ->paginate($perPage)
+                    ->withQueryString()
+                    ->through(fn ($p) => $this->formatProperty($p));
+            }
         } else {
-            $properties = Property::with('images')
-                ->when($type,      fn ($q, $v) => $q->where('type', $v))
-                ->when($operation, fn ($q, $v) => $q->where('operation', $v))
-                ->when(
-                    $isAuthenticated && $status,
-                    fn ($q, $v) => $q->where('status', $v)
-                )
-                ->when(
-                    ! $isAuthenticated,
-                    fn ($q) => $q->whereIn('status', ['available', 'reserved'])
-                )
-                ->when(
-                    $isAuthenticated && ! $isAdmin,
-                    fn ($q) => $q->where('user_id', $user->id)
-                )
-                ->latest()
+            $properties = $applyFilters(Property::query())
                 ->paginate($perPage)
                 ->withQueryString()
                 ->through(fn ($p) => $this->formatProperty($p));
@@ -101,9 +109,6 @@ class PropertyController extends Controller
             ->withQueryString()
             ->through(fn ($p) => $this->formatProperty($p));
 
-        // FIX: NO usar Inertia::merge() aquí.
-        // merge() solo funciona en requests de paginación incremental (page=2,3…).
-        // En la carga inicial del landing hace que Inertia redirija a /properties.
         return Inertia::render('landing', [
             'properties'  => $properties,
             'canRegister' => false,

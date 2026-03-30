@@ -2,11 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { router } from '@inertiajs/react';
 
 interface SearchNavProps {
-    /** Ruta a la que se envía la búsqueda. Por defecto: properties.index */
     routeName?: string;
-    /** Valor inicial (para rellenar desde los filtros del servidor) */
     initialValue?: string;
-    /** Placeholder del input */
     placeholder?: string;
 }
 
@@ -17,15 +14,23 @@ export default function SearchNav({
 }: SearchNavProps) {
     const [value, setValue] = useState(initialValue);
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    // ── FIX: evitar que el efecto dispare en el montaje inicial ──────────────
+    // Sin este ref, useEffect se ejecuta al montar el componente aunque value
+    // esté vacío, haciendo router.get() a properties.index y redirigiendo.
+    const isMounted = useRef(false);
 
-    // Dispara la búsqueda con debounce de 350 ms para no saturar requests
     useEffect(() => {
+        // Saltar la primera ejecución (montaje)
+        if (!isMounted.current) {
+            isMounted.current = true;
+            return;
+        }
+
         if (debounceRef.current) clearTimeout(debounceRef.current);
 
         debounceRef.current = setTimeout(() => {
             router.get(
                 route(routeName),
-                // Si el campo está vacío mandamos undefined para limpiar el param de la URL
                 { search: value || undefined },
                 {
                     preserveState: true,
@@ -50,7 +55,6 @@ export default function SearchNav({
                 value={value}
                 onChange={(e) => setValue(e.target.value)}
             />
-            {/* Botón de limpieza — aparece solo cuando hay texto */}
             {value && (
                 <button
                     onClick={() => setValue('')}
