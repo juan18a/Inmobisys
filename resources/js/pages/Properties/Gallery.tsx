@@ -33,13 +33,18 @@ export default function PropertyGallery({ properties, filters = {}, routeName }:
     const [activeFilter, setActiveFilter] = useState<PropertyCategory>('all');
     const [loading, setLoading] = useState(false);
 
-    const mappedProperties: PropertyData[] = mapProperties(properties.data);
+    // Acumulamos las propiedades localmente para el "load more"
+    const [allItems, setAllItems] = useState<PropertyData[]>(() =>
+        mapProperties(properties.data)
+    );
+    const [currentPage, setCurrentPage] = useState(properties.current_page);
+    const [lastPage] = useState(properties.last_page);
 
     const isVisible = (category: string) =>
         activeFilter === 'all' || category === activeFilter;
 
     const handleLoadMore = () => {
-        if (properties.current_page >= properties.last_page || loading) return;
+        if (currentPage >= lastPage || loading) return;
 
         setLoading(true);
 
@@ -47,18 +52,24 @@ export default function PropertyGallery({ properties, filters = {}, routeName }:
 
         router.get(
             url,
-            { ...filters, page: properties.current_page + 1 },
+            { ...filters, page: currentPage + 1 },
             {
                 preserveState: true,
                 preserveScroll: true,
                 only: ['properties'],
-                merge: true,
+                onSuccess: (page) => {
+                    const newProperties = page.props.properties as PaginatedProperties;
+                    const newItems = mapProperties(newProperties.data);
+                    // Acumulamos en lugar de reemplazar
+                    setAllItems(prev => [...prev, ...newItems]);
+                    setCurrentPage(newProperties.current_page);
+                },
                 onFinish: () => setLoading(false),
             }
         );
     };
 
-    const allLoaded = properties.current_page >= properties.last_page;
+    const allLoaded = currentPage >= lastPage;
 
     return (
         <section className="py-24 px-10 max-w-7xl mx-auto">
@@ -76,9 +87,8 @@ export default function PropertyGallery({ properties, filters = {}, routeName }:
 
                 {/* Controles: buscador + filtros de categoría */}
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 flex-wrap">
-                    {/* Buscador TNTSearch — se conecta a properties.index */}
                     <SearchNav
-                        routeName={routeName ?? 'properties.index'}
+                        routeName={routeName}
                         initialValue={filters.search ?? ''}
                         placeholder="Search properties..."
                     />
@@ -90,8 +100,8 @@ export default function PropertyGallery({ properties, filters = {}, routeName }:
                                 key={opt.value}
                                 onClick={() => setActiveFilter(opt.value)}
                                 className={`px-6 py-2 rounded-full font-label text-xs font-bold transition-colors ${activeFilter === opt.value
-                                    ? 'bg-secondary text-on-primary'
-                                    : 'bg-secondary-container text-secondary hover:bg-surface-container-highest'
+                                        ? 'bg-secondary text-on-primary'
+                                        : 'bg-secondary-container text-secondary hover:bg-surface-container-highest'
                                     }`}
                             >
                                 {opt.label}
@@ -102,7 +112,7 @@ export default function PropertyGallery({ properties, filters = {}, routeName }:
             </div>
 
             {/* Grid de propiedades */}
-            {mappedProperties.length === 0 ? (
+            {allItems.length === 0 ? (
                 <div className="text-center py-32 text-on-surface-variant opacity-50">
                     <span className="material-symbols-outlined text-6xl mb-4 block">search_off</span>
                     <p className="font-headline text-xl">No hay propiedades disponibles</p>
@@ -114,7 +124,7 @@ export default function PropertyGallery({ properties, filters = {}, routeName }:
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {mappedProperties.map((property, i) => (
+                    {allItems.map((property, i) => (
                         <PropertyCard
                             key={property.id ?? `${property.title}-${i}`}
                             property={property}
