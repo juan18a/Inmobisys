@@ -36,7 +36,7 @@ export default function Security({
     twoFactorEnabled = false,
 }: Props) {
     const { auth } = usePage().props;
-    const isAdmin = auth.user.role === 'admin';
+    const isAdmin = auth?.user?.role === 'admin';
 
     const passwordInput = useRef<HTMLInputElement>(null);
     const currentPasswordInput = useRef<HTMLInputElement>(null);
@@ -175,6 +175,7 @@ export default function Security({
                     </Form>
                 </div>
 
+                {/*
                 {canManageTwoFactor && !isAdmin && (
                     <div className="space-y-6">
                         <Heading
@@ -264,6 +265,10 @@ export default function Security({
                         />
                     </div>
                 )}
+
+
+
+                */}
             </SettingsLayout>
         </AppLayout>
     );

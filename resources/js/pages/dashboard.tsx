@@ -3,6 +3,7 @@ import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
 import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes';
 import type { BreadcrumbItem } from '@/types';
+import { usePage } from '@inertiajs/react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -11,8 +12,20 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
+
+const { auth } = usePage().props;
+const isAdmin = auth?.user?.role === 'admin';
+
+
 export default function Dashboard() {
+
+
+
     return (
+
+
+
+
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Dashboard" />
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
@@ -33,7 +46,8 @@ export default function Dashboard() {
                         </div>
                     </Link>
 
-                    <div className="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
+
+                    {isAdmin && (
                         <Link
                             href={route('admin.users.index')}
                             className="group relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border bg-white dark:bg-neutral-900 p-6 flex flex-col justify-between hover:border-primary transition-colors shadow-sm"
@@ -46,10 +60,12 @@ export default function Dashboard() {
                             </div>
                             <div>
                                 <h3 className="font-headline text-xl font-bold">Gestión de vendedores</h3>
-                                <p className="text-sm text-neutral-500">Administra tus vendedores.</p>
+                                <p className="text-sm text-neutral-500">Administra tus vendedores para que ellos creen sus propiedades.</p>
                             </div>
                         </Link>
-                    </div>
+                    )}
+
+
 
                     <div className="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
                         <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" />
