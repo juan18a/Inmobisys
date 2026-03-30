@@ -8,13 +8,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
+use Laravel\Scout\Searchable;
 
 class Property extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, Searchable;
 
     protected $fillable = [
-        'user_id',          // ← NUEVO: vendedor propietario
+        'user_id',
         'title',
         'slug',
         'description',
@@ -56,6 +57,43 @@ class Property extends Model
         return 'slug';
     }
 
+    // ── Scout / Typesense ──────────────────────────────────────────────────────
+
+    /**
+     * Campos que Typesense indexa.
+     *
+     * IMPORTANTE: Typesense es estricto con los tipos.
+     * - 'id' DEBE ser string
+     * - Los campos numéricos deben coincidir exactamente con el schema en scout.php
+     * - Los campos string nunca pueden ser null (usar '' como fallback)
+     */
+    public function toSearchableArray(): array
+    {
+        return [
+            'id'          => (string) $this->id,
+            'title'       => (string) ($this->title ?? ''),
+            'description' => (string) ($this->description ?? ''),
+            'type'        => (string) ($this->type ?? ''),
+            'operation'   => (string) ($this->operation ?? ''),
+            'address'     => (string) ($this->address ?? ''),
+            'city'        => (string) ($this->city ?? ''),
+            'state'       => (string) ($this->state ?? ''),
+            'country'     => (string) ($this->country ?? ''),
+            'status'      => (string) ($this->status ?? ''),
+            'price'       => (float)  ($this->price ?? 0),
+            'bedrooms'    => (int)    ($this->bedrooms ?? 0),
+            'created_at'  => $this->created_at?->timestamp ?? 0,
+        ];
+    }
+
+    /**
+     * Solo indexar propiedades no eliminadas con soft-delete.
+     */
+    public function shouldBeSearchable(): bool
+    {
+        return $this->deleted_at === null;
+    }
+
     // ── Relationships ──────────────────────────────────────────────────────────
 
     public function images(): HasMany
@@ -63,9 +101,6 @@ class Property extends Model
         return $this->hasMany(PropertyImage::class)->orderBy('sort_order');
     }
 
-    /**
-     * El vendedor que creó esta propiedad.
-     */
     public function owner(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
@@ -73,10 +108,6 @@ class Property extends Model
 
     // ── Helpers de autorización ────────────────────────────────────────────────
 
-    /**
-     * Devuelve true si el usuario dado puede editar esta propiedad.
-     * Admin puede editar cualquiera; seller solo las suyas.
-     */
     public function canBeEditedBy(User $user): bool
     {
         return $user->isAdmin() || $this->user_id === $user->id;
@@ -131,10 +162,6 @@ class Property extends Model
         return $query->where('operation', $operation);
     }
 
-    /**
-     * Scope: propiedades visibles para un usuario dado.
-     * Admin ve todas; seller solo las suyas.
-     */
     public function scopeVisibleFor($query, User $user)
     {
         if ($user->isAdmin()) {

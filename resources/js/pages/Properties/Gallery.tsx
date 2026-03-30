@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { router } from '@inertiajs/react';
 import PropertyCard from '../../components/custom/PropertyCard';
+import SearchNav from '../../components/custom/SearchNav';
 import { mapProperties } from '../../components/custom/utils/propertyMapper';
 
 import type {
@@ -42,7 +43,6 @@ export default function PropertyGallery({ properties, filters = {}, routeName }:
 
         setLoading(true);
 
-        // Si se provee routeName se usa, de lo contrario se queda en la URL actual
         const url = routeName ? route(routeName) : window.location.pathname;
 
         router.get(
@@ -63,6 +63,7 @@ export default function PropertyGallery({ properties, filters = {}, routeName }:
     return (
         <section className="py-24 px-10 max-w-7xl mx-auto">
             <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-8">
+                {/* Título + contador */}
                 <div>
                     <span className="font-label text-secondary tracking-[0.2em] uppercase text-xs font-bold">
                         The Collection
@@ -73,26 +74,43 @@ export default function PropertyGallery({ properties, filters = {}, routeName }:
                     </p>
                 </div>
 
-                <div className="flex gap-4 flex-wrap">
-                    {FILTER_OPTIONS.map((opt) => (
-                        <button
-                            key={opt.value}
-                            onClick={() => setActiveFilter(opt.value)}
-                            className={`px-6 py-2 rounded-full font-label text-xs font-bold transition-colors ${activeFilter === opt.value
-                                ? 'bg-secondary text-on-primary'
-                                : 'bg-secondary-container text-secondary hover:bg-surface-container-highest'
-                                }`}
-                        >
-                            {opt.label}
-                        </button>
-                    ))}
+                {/* Controles: buscador + filtros de categoría */}
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 flex-wrap">
+                    {/* Buscador TNTSearch — se conecta a properties.index */}
+                    <SearchNav
+                        routeName={routeName ?? 'properties.index'}
+                        initialValue={filters.search ?? ''}
+                        placeholder="Search properties..."
+                    />
+
+                    {/* Filtros de categoría (client-side) */}
+                    <div className="flex gap-3 flex-wrap">
+                        {FILTER_OPTIONS.map((opt) => (
+                            <button
+                                key={opt.value}
+                                onClick={() => setActiveFilter(opt.value)}
+                                className={`px-6 py-2 rounded-full font-label text-xs font-bold transition-colors ${activeFilter === opt.value
+                                    ? 'bg-secondary text-on-primary'
+                                    : 'bg-secondary-container text-secondary hover:bg-surface-container-highest'
+                                    }`}
+                            >
+                                {opt.label}
+                            </button>
+                        ))}
+                    </div>
                 </div>
             </div>
 
+            {/* Grid de propiedades */}
             {mappedProperties.length === 0 ? (
                 <div className="text-center py-32 text-on-surface-variant opacity-50">
+                    <span className="material-symbols-outlined text-6xl mb-4 block">search_off</span>
                     <p className="font-headline text-xl">No hay propiedades disponibles</p>
-                    <p className="text-sm mt-2">Ajusta los filtros o agrega nuevas propiedades.</p>
+                    <p className="text-sm mt-2">
+                        {filters.search
+                            ? `Sin resultados para "${filters.search}". Intenta con otro término.`
+                            : 'Ajusta los filtros o agrega nuevas propiedades.'}
+                    </p>
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -106,12 +124,14 @@ export default function PropertyGallery({ properties, filters = {}, routeName }:
                 </div>
             )}
 
+            {/* Paginación / Load more */}
             {!allLoaded ? (
                 <div className="mt-20 flex justify-center">
                     <button
                         onClick={handleLoadMore}
                         disabled={loading}
-                        className={`group flex items-center gap-3 bg-white border border-secondary text-secondary px-12 py-5 rounded-full font-headline font-bold hover:bg-secondary hover:text-on-primary transition-all ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        className={`group flex items-center gap-3 bg-white border border-secondary text-secondary px-12 py-5 rounded-full font-headline font-bold hover:bg-secondary hover:text-on-primary transition-all ${loading ? 'opacity-50 cursor-not-allowed' : ''
+                            }`}
                     >
                         {loading ? 'Loading...' : 'Show More Properties'}
                         {!loading && (

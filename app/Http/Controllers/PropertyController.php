@@ -16,43 +16,69 @@ use Inertia\Response;
 
 class PropertyController extends Controller
 {
-    // ── Index (Admin Dashboard & Public Gallery) ──────────────────────────────
+    // ── Index (Dashboard & Public Gallery) ────────────────────────────────────
 
     public function index(Request $request): Response
     {
         $user            = auth()->user();
         $isAuthenticated = $user !== null;
         $isAdmin         = $user?->isAdmin() ?? false;
+        $perPage         = $isAuthenticated ? 12 : 6;
 
-        $properties = Property::with('images')
-            // Agrupado con where() para que el OR no rompa los demás filtros
-            ->when($request->search, fn ($q, $v) =>
-                $q->where(fn ($inner) =>
-                    $inner->where('title', 'like', "%{$v}%")
-                          ->orWhere('address', 'like', "%{$v}%")
-                          ->orWhere('city', 'like', "%{$v}%")
+        $search    = $request->search;
+        $type      = $request->type;
+        $operation = $request->operation;
+        $status    = $request->status;
+
+        // ── Búsqueda con TNTSearch ─────────────────────────────────────────────
+        // Cuando hay término de búsqueda usamos Scout; de lo contrario,
+        // una query Eloquent normal para mantener todos los filtros y eager loads.
+        if ($search) {
+            $properties = Property::search($search)
+                ->query(function ($query) use (
+                    $isAuthenticated, $isAdmin, $user,
+                    $type, $operation, $status
+                ) {
+                    $query->with('images')
+                        ->when($type,      fn ($q, $v) => $q->where('type', $v))
+                        ->when($operation, fn ($q, $v) => $q->where('operation', $v))
+                        ->when(
+                            $isAuthenticated && $status,
+                            fn ($q, $v) => $q->where('status', $v)
+                        )
+                        ->when(
+                            ! $isAuthenticated,
+                            fn ($q) => $q->whereIn('status', ['available', 'reserved'])
+                        )
+                        ->when(
+                            $isAuthenticated && ! $isAdmin,
+                            fn ($q) => $q->where('user_id', $user->id)
+                        );
+                })
+                ->paginate($perPage)
+                ->withQueryString()
+                ->through(fn ($p) => $this->formatProperty($p));
+        } else {
+            $properties = Property::with('images')
+                ->when($type,      fn ($q, $v) => $q->where('type', $v))
+                ->when($operation, fn ($q, $v) => $q->where('operation', $v))
+                ->when(
+                    $isAuthenticated && $status,
+                    fn ($q, $v) => $q->where('status', $v)
                 )
-            )
-            ->when($request->type,      fn ($q, $v) => $q->where('type', $v))
-            ->when($request->operation, fn ($q, $v) => $q->where('operation', $v))
-            // Filtro de estado: solo disponibles para público; dashboard muestra todos
-            ->when(
-                $isAuthenticated && $request->status,
-                fn ($q, $v) => $q->where('status', $v)
-            )
-            ->when(
-                ! $isAuthenticated,
-                fn ($q) => $q->whereIn('status', ['available', 'reserved'])
-            )
-            // ── NUEVO: sellers solo ven sus propias propiedades ──────────────
-            ->when(
-                $isAuthenticated && ! $isAdmin,
-                fn ($q) => $q->where('user_id', $user->id)
-            )
-            ->latest()
-            ->paginate($isAuthenticated ? 12 : 6)
-            ->withQueryString()
-            ->through(fn ($p) => $this->formatProperty($p));
+                ->when(
+                    ! $isAuthenticated,
+                    fn ($q) => $q->whereIn('status', ['available', 'reserved'])
+                )
+                ->when(
+                    $isAuthenticated && ! $isAdmin,
+                    fn ($q) => $q->where('user_id', $user->id)
+                )
+                ->latest()
+                ->paginate($perPage)
+                ->withQueryString()
+                ->through(fn ($p) => $this->formatProperty($p));
+        }
 
         $view = $isAuthenticated ? 'Properties/Index' : 'Properties/Gallery';
 
@@ -122,10 +148,11 @@ class PropertyController extends Controller
         DB::transaction(function () use ($request) {
             $data = $request->validated();
             $data['slug']    = $this->uniqueSlug($data['title']);
-            $data['user_id'] = auth()->id(); // ← NUEVO: asignar propietario
+            $data['user_id'] = auth()->id();
 
             unset($data['images'], $data['cover_index']);
 
+            // Scout indexa automáticamente al crear el modelo
             $property = Property::create($data);
 
             if ($request->hasFile('images')) {
@@ -157,7 +184,6 @@ class PropertyController extends Controller
 
     public function edit(Property $property): Response
     {
-        // ── NUEVO: verificar que el seller sea el dueño ──────────────────────
         $this->authorizeProperty($property);
 
         $property->load('images');
@@ -171,7 +197,6 @@ class PropertyController extends Controller
 
     public function update(UpdatePropertyRequest $request, Property $property): \Illuminate\Http\RedirectResponse
     {
-        // ── NUEVO: verificar que el seller sea el dueño ──────────────────────
         $this->authorizeProperty($property);
 
         DB::transaction(function () use ($request, $property) {
@@ -185,6 +210,7 @@ class PropertyController extends Controller
                 $data['slug'] = $this->uniqueSlug($data['title'], $property->id);
             }
 
+            // Scout re-indexa automáticamente al actualizar el modelo
             $property->update($data);
 
             if (! empty($deleteImageIds)) {
@@ -223,7 +249,6 @@ class PropertyController extends Controller
 
     public function destroy(Property $property): \Illuminate\Http\RedirectResponse
     {
-        // La ruta ya tiene middleware 'role:admin'; doble verificación aquí también.
         abort_unless(auth()->user()?->isAdmin(), 403, 'Solo el administrador puede eliminar propiedades.');
 
         DB::transaction(function () use ($property) {
@@ -231,6 +256,8 @@ class PropertyController extends Controller
                 Storage::disk('public')->delete($img->path);
             }
             $property->images()->delete();
+
+            // Scout elimina del índice automáticamente al hacer delete()
             $property->delete();
         });
 
@@ -264,10 +291,6 @@ class PropertyController extends Controller
 
     // ── Private helpers ────────────────────────────────────────────────────────
 
-    /**
-     * Verifica que el usuario autenticado tenga permiso para modificar
-     * esta propiedad. Admin puede todo; seller solo sus propias propiedades.
-     */
     private function authorizeProperty(Property $property): void
     {
         $user = auth()->user();
@@ -326,7 +349,7 @@ class PropertyController extends Controller
     {
         return [
             'id'              => $property->id,
-            'user_id'         => $property->user_id,   // ← NUEVO: expuesto al frontend
+            'user_id'         => $property->user_id,
             'title'           => $property->title,
             'slug'            => $property->slug,
             'description'     => $property->description,
