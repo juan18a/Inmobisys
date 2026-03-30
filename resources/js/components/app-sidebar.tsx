@@ -1,7 +1,7 @@
-import { Link } from '@inertiajs/react';
-import { BookOpen, FolderGit2, LayoutGrid, Home } from 'lucide-react';
+import { Link, usePage } from '@inertiajs/react';
+import { BookOpen, FolderGit2, LayoutGrid, Home, UsersRound } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
-import { NavFooter } from '@/components/nav-footer';
+//import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import {
@@ -16,19 +16,7 @@ import {
 import { dashboard } from '@/routes';
 import type { NavItem } from '@/types';
 
-const mainNavItems: NavItem[] = [
-    {
-        title: 'Dashboard',
-        href: dashboard(),
-        icon: LayoutGrid,
-    },
-    {
-        title: 'Propiedades',
-        href: route('properties.index'),
-        icon: Home,
-    },
-];
-
+/*
 const footerNavItems: NavItem[] = [
     {
         title: 'Repository',
@@ -41,8 +29,32 @@ const footerNavItems: NavItem[] = [
         icon: BookOpen,
     },
 ];
+*/
 
 export function AppSidebar() {
+    const { auth } = usePage().props as any;
+    const isAdmin = auth?.user?.role === 'admin';
+
+    // Los items base que todos los usuarios autenticados ven
+    const mainNavItems: NavItem[] = [
+        {
+            title: 'Dashboard',
+            href: dashboard(),
+            icon: LayoutGrid,
+        },
+        {
+            title: 'Propiedades',
+            href: route('properties.index'),
+            icon: Home,
+        },
+        // Solo el admin ve el enlace de Usuarios
+        ...(isAdmin ? [{
+            title: 'Usuarios',
+            href: route('admin.users.index'),
+            icon: UsersRound,
+        }] : []),
+    ];
+
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>
@@ -61,10 +73,12 @@ export function AppSidebar() {
                 <NavMain items={mainNavItems} />
             </SidebarContent>
 
+            {/*
             <SidebarFooter>
                 <NavFooter items={footerNavItems} className="mt-auto" />
                 <NavUser />
             </SidebarFooter>
+            */}
         </Sidebar>
     );
 }
