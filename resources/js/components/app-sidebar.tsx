@@ -49,7 +49,7 @@ export function AppSidebar() {
         },
         // Solo el admin ve el enlace de Usuarios
         ...(isAdmin ? [{
-            title: 'Usuarios',
+            title: 'Vendedores',
             href: route('admin.users.index'),
             icon: UsersRound,
         }] : []),
