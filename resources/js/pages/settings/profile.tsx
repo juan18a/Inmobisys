@@ -148,7 +148,8 @@ export default function Profile({
                     </Form>
                 </div>
 
-                {!isAdmin && <DeleteUser />}
+
+                {/*  {!isAdmin && <DeleteUser /> */}
             </SettingsLayout>
         </AppLayout>
     );
