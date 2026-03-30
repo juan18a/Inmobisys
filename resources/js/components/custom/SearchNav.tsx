@@ -8,15 +8,19 @@ interface SearchNavProps {
 }
 
 export default function SearchNav({
-    routeName,
+    routeName = 'properties.index',
     initialValue = '',
     placeholder = 'Search architecture...',
 }: SearchNavProps) {
     const [value, setValue] = useState(initialValue);
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    // ── FIX: evitar que el efecto dispare en el montaje inicial ──────────────
+    // Sin este ref, useEffect se ejecuta al montar el componente aunque value
+    // esté vacío, haciendo router.get() a properties.index y redirigiendo.
     const isMounted = useRef(false);
 
     useEffect(() => {
+        // Saltar la primera ejecución (montaje)
         if (!isMounted.current) {
             isMounted.current = true;
             return;
@@ -25,11 +29,8 @@ export default function SearchNav({
         if (debounceRef.current) clearTimeout(debounceRef.current);
 
         debounceRef.current = setTimeout(() => {
-            // Si no hay routeName, usar la URL actual (landing, etc.)
-            const url = routeName ? route(routeName) : window.location.pathname;
-
             router.get(
-                url,
+                route(routeName),
                 { search: value || undefined },
                 {
                     preserveState: true,
