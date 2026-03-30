@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Str;
-use Pdo\Mysql;
+//use Pdo\Mysql;
 
 return [
 
@@ -17,7 +17,7 @@ return [
     |
     */
 
-    'default' => env('DB_CONNECTION', 'sqlite'),
+    'default' => env('DB_CONNECTION', 'pgsql'),
 
     /*
     |--------------------------------------------------------------------------
