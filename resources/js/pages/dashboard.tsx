@@ -12,20 +12,11 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-
-const { auth } = usePage().props;
-const isAdmin = auth?.user?.role === 'admin';
-
-
 export default function Dashboard() {
-
-
+    const { auth } = usePage().props as any;
+    const isAdmin = auth?.user?.role === 'admin';
 
     return (
-
-
-
-
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Dashboard" />
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
@@ -46,7 +37,6 @@ export default function Dashboard() {
                         </div>
                     </Link>
 
-
                     {isAdmin && (
                         <Link
                             href={route('admin.users.index')}
@@ -64,8 +54,6 @@ export default function Dashboard() {
                             </div>
                         </Link>
                     )}
-
-
 
                     <div className="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
                         <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" />
