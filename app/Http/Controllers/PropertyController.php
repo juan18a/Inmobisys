@@ -30,31 +30,30 @@ class PropertyController extends Controller
         $operation = $request->operation;
         $status    = $request->status;
 
-        // ── Búsqueda con TNTSearch ─────────────────────────────────────────────
-        // Cuando hay término de búsqueda usamos Scout; de lo contrario,
-        // una query Eloquent normal para mantener todos los filtros y eager loads.
         if ($search) {
-            $properties = Property::search($search)
-                ->query(function ($query) use (
-                    $isAuthenticated, $isAdmin, $user,
-                    $type, $operation, $status
-                ) {
-                    $query->with('images')
-                        ->when($type,      fn ($q, $v) => $q->where('type', $v))
-                        ->when($operation, fn ($q, $v) => $q->where('operation', $v))
-                        ->when(
-                            $isAuthenticated && $status,
-                            fn ($q, $v) => $q->where('status', $v)
-                        )
-                        ->when(
-                            ! $isAuthenticated,
-                            fn ($q) => $q->whereIn('status', ['available', 'reserved'])
-                        )
-                        ->when(
-                            $isAuthenticated && ! $isAdmin,
-                            fn ($q) => $q->where('user_id', $user->id)
-                        );
-                })
+            // ── Búsqueda con Scout ────────────────────────────────────────────
+            // Scout devuelve los IDs que coinciden; luego hacemos la query
+            // Eloquent real con esos IDs para aplicar filtros y eager loads.
+            // Esto evita el error 500 de llamar through() sobre el paginador de Scout.
+            $matchingIds = Property::search($search)->keys();
+
+            $properties = Property::with('images')
+                ->whereIn('id', $matchingIds)
+                ->when($type,      fn ($q, $v) => $q->where('type', $v))
+                ->when($operation, fn ($q, $v) => $q->where('operation', $v))
+                ->when(
+                    $isAuthenticated && $status,
+                    fn ($q, $v) => $q->where('status', $v)
+                )
+                ->when(
+                    ! $isAuthenticated,
+                    fn ($q) => $q->whereIn('status', ['available', 'reserved'])
+                )
+                ->when(
+                    $isAuthenticated && ! $isAdmin,
+                    fn ($q) => $q->where('user_id', $user->id)
+                )
+                ->latest()
                 ->paginate($perPage)
                 ->withQueryString()
                 ->through(fn ($p) => $this->formatProperty($p));
@@ -99,13 +98,14 @@ class PropertyController extends Controller
             ->whereIn('status', ['available', 'reserved'])
             ->latest()
             ->paginate(6)
+            ->withQueryString()
             ->through(fn ($p) => $this->formatProperty($p));
 
+        // FIX: NO usar Inertia::merge() aquí.
+        // merge() solo funciona en requests de paginación incremental (page=2,3…).
+        // En la carga inicial del landing hace que Inertia redirija a /properties.
         return Inertia::render('landing', [
-            'properties' => [
-                ...$properties->toArray(),
-                'data' => Inertia::merge($properties->items()),
-            ],
+            'properties'  => $properties,
             'canRegister' => false,
         ]);
     }
@@ -152,7 +152,6 @@ class PropertyController extends Controller
 
             unset($data['images'], $data['cover_index']);
 
-            // Scout indexa automáticamente al crear el modelo
             $property = Property::create($data);
 
             if ($request->hasFile('images')) {
@@ -210,7 +209,6 @@ class PropertyController extends Controller
                 $data['slug'] = $this->uniqueSlug($data['title'], $property->id);
             }
 
-            // Scout re-indexa automáticamente al actualizar el modelo
             $property->update($data);
 
             if (! empty($deleteImageIds)) {
@@ -256,8 +254,6 @@ class PropertyController extends Controller
                 Storage::disk('public')->delete($img->path);
             }
             $property->images()->delete();
-
-            // Scout elimina del índice automáticamente al hacer delete()
             $property->delete();
         });
 
