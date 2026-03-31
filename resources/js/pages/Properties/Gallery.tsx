@@ -78,13 +78,16 @@ export default function PropertyGallery({ properties, filters = {}, routeName }:
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 flex-wrap">
                     {/* SearchNav solo activo en la Gallery pública (/properties),
                         no en el landing (donde no hay routeName) */}
-                    {routeName && (
+                    {/*   {routeName && (
                         <SearchNav
                             routeName={routeName}
                             initialValue={filters.search ?? ''}
                             placeholder="Search properties..."
-                        />
-                    )}
+                        /> 
+
+
+                        
+                    )} */}
 
                     {/* Filtros de categoría (client-side) */}
                     <div className="flex gap-3 flex-wrap">
@@ -93,8 +96,8 @@ export default function PropertyGallery({ properties, filters = {}, routeName }:
                                 key={opt.value}
                                 onClick={() => setActiveFilter(opt.value)}
                                 className={`px-6 py-2 rounded-full font-label text-xs font-bold transition-colors ${activeFilter === opt.value
-                                        ? 'bg-secondary text-on-primary'
-                                        : 'bg-secondary-container text-secondary hover:bg-surface-container-highest'
+                                    ? 'bg-secondary text-on-primary'
+                                    : 'bg-secondary-container text-secondary hover:bg-surface-container-highest'
                                     }`}
                             >
                                 {opt.label}
