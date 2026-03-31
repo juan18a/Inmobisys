@@ -50,6 +50,13 @@ Puedes ver una demostración del proyecto desplegado en:
 **URL**: [http://inmobisys-backend-i7zxm6-d44831-144-225-147-37.traefik.me](http://inmobisys-backend-i7zxm6-d44831-144-225-147-37.traefik.me)
 
 **Credenciales de prueba**:
+
+
+en el .env
+ADMIN_EMAIL=tucorrreo
+ADMIN_PASSWORD=tuclave
+
+
 #php artisan db:seed --class=AdminSeeder
 #php artisan db:seed --class=PropertySeeder
 
