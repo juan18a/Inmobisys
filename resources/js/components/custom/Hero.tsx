@@ -15,7 +15,7 @@ const slides = [
     },
 ];
 
-//comentario
+//comentario 2
 
 export default function HeroSection() {
     const [currentIndex, setCurrentIndex] = useState(0);
