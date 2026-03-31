@@ -133,7 +133,7 @@ El sistema permite una administración fluida de los listados y una visualizaci�
 
 ## 📄 Licencia
 
-Este proyecto es de código abierto y está disponible bajo la [Licencia MIT](https://www.google.com/search?q=LICENSE).
+Este proyecto es de código abierto y está disponible bajo la [Licencia GPL-3.0](https://www.google.com/search?q=LICENSE).
 
 -----
 
