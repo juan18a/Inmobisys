@@ -6,7 +6,7 @@
 @plugin "@tailwindcss/container-queries";
 
 
-@import "tailwindcss";
+
 
 @theme {
     /* Colores del Sistema en formato OKLCH */
