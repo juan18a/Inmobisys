@@ -6,6 +6,13 @@ Aquí tienes el contenido completo del **README.md** actualizado con las captura
 Sistema de gestión inmobiliaria desarrollado en Laravel que permite a los vendedores publicar propiedades en venta, con chat integrado vía N8N, envío de correos con Resend y protección anti-bots mediante Cloudflare Turnstile.
 
 ---
+<img width="1280" height="720" alt="5" src="https://github.com/user-attachments/assets/d0c19463-bc15-4512-80be-88cb1e2dfad5" />
+<img width="1280" height="720" alt="4" src="https://github.com/user-attachments/assets/3811d28c-a7d7-4a21-8877-6557769c2182" />
+<img width="1280" height="720" alt="3" src="https://github.com/user-attachments/assets/897a7625-ec0b-4b73-ab69-edd0fb5ba6f3" />
+<img width="1280" height="720" alt="2" src="https://github.com/user-attachments/assets/ee4f94df-a20a-4ab2-8e96-5fc9b47c2af7" />
+<img width="1280" height="720" alt="1" src="https://github.com/user-attachments/assets/314f8dd5-3641-4b51-8507-cd088addb448" />
+
+
 
 ## 📋 Tabla de Contenidos
 
@@ -43,8 +50,8 @@ Puedes ver una demostración del proyecto desplegado en:
 **URL**: [http://inmobisys-backend-i7zxm6-d44831-144-225-147-37.traefik.me](http://inmobisys-backend-i7zxm6-d44831-144-225-147-37.traefik.me)
 
 **Credenciales de prueba**:
-- Email: `admin@tuinmobiliaria.com`
-- Contraseña: `CambiaMeAhora2024!`
+#php artisan db:seed --class=AdminSeeder
+#php artisan db:seed --class=PropertySeeder
 
 ![Pantalla de Login](1.png)
 *Acceso seguro al panel administrativo.*
