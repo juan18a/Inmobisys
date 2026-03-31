@@ -53,6 +53,7 @@ return [
 
     'database' => [
         'driver' => 'database',
+        'engine' => 'InnoDB',
     ],
 
     /*
