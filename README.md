@@ -5,6 +5,15 @@ Aquí tienes el contenido completo del **README.md** actualizado con las captura
 
 Sistema de gestión inmobiliaria desarrollado en Laravel que permite a los vendedores publicar propiedades en venta, con chat integrado vía N8N, envío de correos con Resend y protección anti-bots mediante Cloudflare Turnstile.
 
+## 🏢 Tabla de Contenidos
+
+<img width="1280" height="720" alt="5" src="https://github.com/user-attachments/assets/5a4f8805-cd06-4fc7-9096-43746cdd594b" />
+<img width="1280" height="720" alt="4" src="https://github.com/user-attachments/assets/a3c512f9-5544-4ff9-bce4-ae18f8a7add0" />
+<img width="1280" height="720" alt="3" src="https://github.com/user-attachments/assets/57315a0f-0dd2-4c38-964f-b9ac767979f6" />
+<img width="1280" height="720" alt="2" src="https://github.com/user-attachments/assets/ed8a1a74-fa56-4cda-98be-2077df2d54d5" />
+<img width="1280" height="720" alt="1" src="https://github.com/user-attachments/assets/bc67ad32-3bda-46b2-b5b1-d7950c0c75af" />
+
+
 ---
 
 ## 📋 Tabla de Contenidos
