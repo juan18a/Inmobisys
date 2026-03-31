@@ -36,17 +36,21 @@ export default function Navbar() {
                     <div className="hidden md:flex items-center gap-6">
 
                         {/* Buscador — apunta a home (/) en landing o a /properties en galería */}
-                        <SearchNav
+                        {/**           <SearchNav
                             routeName={searchRoute}
                             placeholder="Search architecture..."
                         />
-
+*/}
                         {/* Nav links */}
+
+                        {/** 
                         <div className="flex items-center gap-6 font-manrope font-semibold tracking-tight">
                             <a className="text-blue-900 dark:text-white border-b-2 border-blue-900 pb-1" href="#">Propiedades</a>
                             <a className="text-blue-800/60 dark:text-slate-400 hover:text-blue-900 transition-all duration-300" href="#">Sobre Nosotros</a>
                             <a className="text-blue-800/60 dark:text-slate-400 hover:text-blue-900 transition-all duration-300" href="#">Contacto</a>
                         </div>
+
+                        */}
 
                         {/* Actions */}
                         <div className="flex items-center gap-3">
@@ -90,17 +94,17 @@ export default function Navbar() {
                     <div className="flex md:hidden flex-col gap-4 pt-4 pb-2 border-t border-blue-900/10 dark:border-slate-700/30 mt-3">
 
                         {/* Mobile search */}
-                        <SearchNav
+                        {/*            <SearchNav
                             routeName={searchRoute}
                             placeholder="Buscar propiedades..."
-                        />
+                        /> */}
 
                         {/* Mobile nav links */}
-                        <div className="flex flex-col gap-1 font-manrope font-semibold tracking-tight">
+                        {/*               <div className="flex flex-col gap-1 font-manrope font-semibold tracking-tight">
                             <a className="text-blue-900 dark:text-white px-2 py-2 rounded-xl hover:bg-blue-50/50 transition-colors" href="#">Propiedades</a>
                             <a className="text-blue-800/60 dark:text-slate-400 px-2 py-2 rounded-xl hover:bg-blue-50/50 hover:text-blue-900 transition-colors" href="#">Sobre Nosotros</a>
                             <a className="text-blue-800/60 dark:text-slate-400 px-2 py-2 rounded-xl hover:bg-blue-50/50 hover:text-blue-900 transition-colors" href="#">Contacto</a>
-                        </div>
+                        </div> */}
 
                         {/* Mobile CTA */}
                         {auth.user ? (
