@@ -15,6 +15,8 @@ const slides = [
     },
 ];
 
+//comentario
+
 export default function HeroSection() {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [kenBurnsKey, setKenBurnsKey] = useState(0);
