@@ -31,7 +31,7 @@ class PropertyController extends Controller
         $operation = $request->operation;
         $status    = $request->status;
 
-        // Closure reutilizable — aplica todos los filtros Eloquent
+        // Closure reutilizable con todos los filtros Eloquent
         $applyFilters = function ($query) use (
             $isAuthenticated, $isAdmin, $user, $type, $operation, $status
         ) {
@@ -56,7 +56,8 @@ class PropertyController extends Controller
 
         if ($search) {
             try {
-                // Typesense devuelve IDs → Eloquent aplica filtros y pagina
+                // Scout database driver: obtiene IDs del índice full-text
+                // y luego Eloquent aplica filtros, eager loads y paginación.
                 $matchingIds = Property::search($search)->keys();
 
                 $properties = $applyFilters(Property::query())
@@ -66,15 +67,15 @@ class PropertyController extends Controller
                     ->through(fn ($p) => $this->formatProperty($p));
 
             } catch (\Throwable $e) {
-                // Typesense no disponible (ej: red Dokploy no configurada)
-                // → fallback a LIKE para no dar 500
-                Log::warning('Typesense unavailable, using LIKE fallback: ' . $e->getMessage());
+                // Fallback ilike (case-insensitive en PostgreSQL) por si Scout falla
+                Log::warning('Scout no disponible, usando ilike fallback: ' . $e->getMessage());
 
                 $properties = $applyFilters(Property::query())
                     ->where(fn ($q) =>
-                        $q->where('title',   'like', "%{$search}%")
-                          ->orWhere('city',    'like', "%{$search}%")
-                          ->orWhere('address', 'like', "%{$search}%")
+                        $q->where('title',       'ilike', "%{$search}%")
+                          ->orWhere('city',       'ilike', "%{$search}%")
+                          ->orWhere('address',    'ilike', "%{$search}%")
+                          ->orWhere('description','ilike', "%{$search}%")
                     )
                     ->paginate($perPage)
                     ->withQueryString()
@@ -109,6 +110,8 @@ class PropertyController extends Controller
             ->withQueryString()
             ->through(fn ($p) => $this->formatProperty($p));
 
+        // NO usar Inertia::merge() aquí — solo funciona en paginación incremental.
+        // En carga inicial causaría redirect a /properties.
         return Inertia::render('landing', [
             'properties'  => $properties,
             'canRegister' => false,
@@ -123,7 +126,7 @@ class PropertyController extends Controller
             ->whereIn('status', ['available', 'reserved'])
             ->when($request->type,      fn ($q, $v) => $q->where('type', $v))
             ->when($request->operation, fn ($q, $v) => $q->where('operation', $v))
-            ->when($request->city,      fn ($q, $v) => $q->where('city', 'like', "%{$v}%"))
+            ->when($request->city,      fn ($q, $v) => $q->where('city', 'ilike', "%{$v}%"))
             ->when($request->min_price, fn ($q, $v) => $q->where('price', '>=', $v))
             ->when($request->max_price, fn ($q, $v) => $q->where('price', '<=', $v))
             ->when($request->bedrooms,  fn ($q, $v) => $q->where('bedrooms', '>=', $v))
@@ -157,6 +160,7 @@ class PropertyController extends Controller
 
             unset($data['images'], $data['cover_index']);
 
+            // Scout indexa automáticamente al crear
             $property = Property::create($data);
 
             if ($request->hasFile('images')) {
@@ -189,7 +193,6 @@ class PropertyController extends Controller
     public function edit(Property $property): Response
     {
         $this->authorizeProperty($property);
-
         $property->load('images');
 
         return Inertia::render('Properties/Edit', [
@@ -214,6 +217,7 @@ class PropertyController extends Controller
                 $data['slug'] = $this->uniqueSlug($data['title'], $property->id);
             }
 
+            // Scout re-indexa automáticamente al actualizar
             $property->update($data);
 
             if (! empty($deleteImageIds)) {
@@ -259,6 +263,7 @@ class PropertyController extends Controller
                 Storage::disk('public')->delete($img->path);
             }
             $property->images()->delete();
+            // Scout desindeza automáticamente al eliminar
             $property->delete();
         });
 

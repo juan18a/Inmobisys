@@ -14,13 +14,13 @@ export default function SearchNav({
 }: SearchNavProps) {
     const [value, setValue] = useState(initialValue);
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    // ── FIX: evitar que el efecto dispare en el montaje inicial ──────────────
-    // Sin este ref, useEffect se ejecuta al montar el componente aunque value
-    // esté vacío, haciendo router.get() a properties.index y redirigiendo.
+
+    // Evita que el efecto dispare en el montaje inicial aunque value esté vacío.
+    // Sin esto, al montar el componente en el landing se haría router.get()
+    // a properties.index causando la redirección.
     const isMounted = useRef(false);
 
     useEffect(() => {
-        // Saltar la primera ejecución (montaje)
         if (!isMounted.current) {
             isMounted.current = true;
             return;

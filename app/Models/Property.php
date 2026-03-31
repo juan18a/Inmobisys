@@ -57,37 +57,30 @@ class Property extends Model
         return 'slug';
     }
 
-    // ── Scout / Typesense ──────────────────────────────────────────────────────
+    // ── Scout / database driver ────────────────────────────────────────────────
 
     /**
-     * Campos que Typesense indexa.
-     *
-     * IMPORTANTE: Typesense es estricto con los tipos.
-     * - 'id' DEBE ser string
-     * - Los campos numéricos deben coincidir exactamente con el schema en scout.php
-     * - Los campos string nunca pueden ser null (usar '' como fallback)
+     * Campos que Scout indexa en PostgreSQL.
+     * El driver 'database' usa estos campos para construir el índice full-text.
      */
     public function toSearchableArray(): array
     {
         return [
-            'id'          => (string) $this->id,
-            'title'       => (string) ($this->title ?? ''),
-            'description' => (string) ($this->description ?? ''),
-            'type'        => (string) ($this->type ?? ''),
-            'operation'   => (string) ($this->operation ?? ''),
-            'address'     => (string) ($this->address ?? ''),
-            'city'        => (string) ($this->city ?? ''),
-            'state'       => (string) ($this->state ?? ''),
-            'country'     => (string) ($this->country ?? ''),
-            'status'      => (string) ($this->status ?? ''),
-            'price'       => (float)  ($this->price ?? 0),
-            'bedrooms'    => (int)    ($this->bedrooms ?? 0),
-            'created_at'  => $this->created_at?->timestamp ?? 0,
+            'id'          => $this->id,
+            'title'       => $this->title,
+            'description' => $this->description,
+            'type'        => $this->type,
+            'operation'   => $this->operation,
+            'address'     => $this->address,
+            'city'        => $this->city,
+            'state'       => $this->state,
+            'country'     => $this->country,
+            'status'      => $this->status,
         ];
     }
 
     /**
-     * Solo indexar propiedades no eliminadas con soft-delete.
+     * Solo indexar propiedades no eliminadas (soft-delete).
      */
     public function shouldBeSearchable(): bool
     {
