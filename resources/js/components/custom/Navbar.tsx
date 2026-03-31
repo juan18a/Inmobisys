@@ -29,7 +29,7 @@ export default function Navbar() {
                         className="text-xl md:text-2xl font-bold text-blue-900 dark:text-blue-50 font-headline tracking-tighter shrink-0"
                         href="#"
                     >
-                        Ethereal Estate
+                        Inmobisys
                     </a>
 
                     {/* Desktop */}
