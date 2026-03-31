@@ -6,12 +6,10 @@ use App\Http\Controllers\Admin\UserController;
 
 // ─── Pública ──────────────────────────────────────────────────────────────────
 
+// El landing ahora acepta ?search= para filtrar propiedades sin salir de /
 Route::get('/', [PropertyController::class, 'landing'])->name('home');
 
 // ─── Bloquear registro público ────────────────────────────────────────────────
-// Fortify registra sus rutas automáticamente según config/fortify.php.
-// Estas rutas adicionales tapan cualquier GET/POST a /register que
-// pudiera colarse aunque se elimine Features::registration() del config.
 
 Route::get('/register',  fn () => abort(404))->name('register');
 Route::post('/register', fn () => abort(404));
@@ -38,7 +36,6 @@ Route::middleware(['auth', 'verified', 'role:admin'])
 
 Route::get('/properties', [PropertyController::class, 'index'])->name('properties.index');
 
-// Crear y editar: admin y seller (cualquier autenticado)
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/properties/create',          [PropertyController::class, 'create'])->name('properties.create');
     Route::post('/properties',                [PropertyController::class, 'store'])->name('properties.store');
@@ -46,7 +43,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::match(['put', 'patch'], '/properties/{property}', [PropertyController::class, 'update'])->name('properties.update');
 });
 
-// Eliminar: solo admin — doble protección (ruta + controller)
 Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::delete('/properties/{property}',                [PropertyController::class, 'destroy'])->name('properties.destroy');
     Route::delete('properties/{property}/images/{image}', [PropertyController::class, 'destroyImage'])->name('properties.images.destroy');

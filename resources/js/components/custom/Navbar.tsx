@@ -1,11 +1,19 @@
 import React, { useState } from 'react';
 import { Link, usePage } from '@inertiajs/react';
-import { dashboard, login } from '@/routes';  // ← quitado 'register'
+import { dashboard, login } from '@/routes';
 import SearchNav from '../custom/SearchNav';
 
-export default function Navbar() {  // ← quitado prop canRegister
+export default function Navbar() {
     const [menuOpen, setMenuOpen] = useState(false);
     const { auth } = usePage().props as any;
+
+    // Detectar en qué página estamos para apuntar el buscador
+    // a la ruta correcta: landing (/) o galería pública (/properties)
+    const isLanding = typeof window !== 'undefined'
+        ? window.location.pathname === '/'
+        : true;
+
+    const searchRoute = isLanding ? 'home' : 'properties.index';
 
     return (
         <header className="fixed top-0 left-0 right-0 z-50 px-4 md:px-0">
@@ -26,7 +34,12 @@ export default function Navbar() {  // ← quitado prop canRegister
 
                     {/* Desktop */}
                     <div className="hidden md:flex items-center gap-6">
-                        <SearchNav />
+
+                        {/* Buscador — apunta a home (/) en landing o a /properties en galería */}
+                        <SearchNav
+                            routeName={searchRoute}
+                            placeholder="Search architecture..."
+                        />
 
                         {/* Nav links */}
                         <div className="flex items-center gap-6 font-manrope font-semibold tracking-tight">
@@ -38,7 +51,6 @@ export default function Navbar() {  // ← quitado prop canRegister
                         {/* Actions */}
                         <div className="flex items-center gap-3">
                             {auth.user ? (
-                                // Usuario autenticado → ir al dashboard
                                 <Link
                                     href={dashboard()}
                                     className="bg-secondary text-on-primary px-5 py-2 rounded-full font-headline font-bold text-sm hover:scale-95 active:scale-90 transition-transform"
@@ -46,7 +58,6 @@ export default function Navbar() {  // ← quitado prop canRegister
                                     Dashboard
                                 </Link>
                             ) : (
-                                // No autenticado → solo login, sin registro
                                 <Link
                                     href={login()}
                                     className="material-symbols-outlined text-secondary scale-95 active:scale-90 transition-transform p-2 rounded-full hover:bg-blue-50/50"
@@ -77,15 +88,12 @@ export default function Navbar() {  // ← quitado prop canRegister
                 {/* Mobile menu */}
                 {menuOpen && (
                     <div className="flex md:hidden flex-col gap-4 pt-4 pb-2 border-t border-blue-900/10 dark:border-slate-700/30 mt-3">
+
                         {/* Mobile search */}
-                        <div className="flex items-center bg-surface-container-low rounded-full px-4 py-2 gap-2 border border-outline-variant/20">
-                            <span className="material-symbols-outlined text-secondary text-sm">search</span>
-                            <input
-                                className="bg-transparent border-none focus:ring-0 text-sm font-label w-full text-on-surface outline-none"
-                                placeholder="Buscar propiedades..."
-                                type="text"
-                            />
-                        </div>
+                        <SearchNav
+                            routeName={searchRoute}
+                            placeholder="Buscar propiedades..."
+                        />
 
                         {/* Mobile nav links */}
                         <div className="flex flex-col gap-1 font-manrope font-semibold tracking-tight">

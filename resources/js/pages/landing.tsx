@@ -10,8 +10,10 @@ import { Head } from '@inertiajs/react';
 
 export default function Landing({
     properties,
+    filters = {},
 }: {
     properties: PaginatedProperties;
+    filters?: { search?: string };
 }) {
     return (
         <>
@@ -23,7 +25,13 @@ export default function Landing({
             <Hero />
 
             {properties && (
-                <PropertyGallery properties={properties} />
+                // routeName="home" hace que Gallery y su SearchNav
+                // busquen dentro del landing (/) sin salir a /properties
+                <PropertyGallery
+                    properties={properties}
+                    filters={filters}
+                    routeName="home"
+                />
             )}
 
             <SignatureSection />
@@ -31,7 +39,6 @@ export default function Landing({
             <ChatWidget />
             <Footer />
 
-            {/* Banner de cookies — se renderiza encima de todo */}
             <CookieBanner />
         </>
     );

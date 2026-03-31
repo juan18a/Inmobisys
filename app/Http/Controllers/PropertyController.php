@@ -103,17 +103,47 @@ class PropertyController extends Controller
 
     public function landing(Request $request): Response
     {
-        $properties = Property::with('images')
-            ->whereIn('status', ['available', 'reserved'])
-            ->latest()
-            ->paginate(6)
-            ->withQueryString()
-            ->through(fn ($p) => $this->formatProperty($p));
+        $search = $request->search;
+
+        if ($search) {
+            try {
+                $matchingIds = Property::search($search)->keys();
+                $properties  = Property::with('images')
+                    ->whereIn('status', ['available', 'reserved'])
+                    ->whereIn('id', $matchingIds)
+                    ->latest()
+                    ->paginate(6)
+                    ->withQueryString()
+                    ->through(fn ($p) => $this->formatProperty($p));
+            } catch (\Throwable $e) {
+                Log::warning('Scout no disponible en landing, usando ilike: ' . $e->getMessage());
+                $properties = Property::with('images')
+                    ->whereIn('status', ['available', 'reserved'])
+                    ->where(fn ($q) =>
+                        $q->where('title',       'ilike', "%{$search}%")
+                          ->orWhere('city',       'ilike', "%{$search}%")
+                          ->orWhere('address',    'ilike', "%{$search}%")
+                          ->orWhere('description','ilike', "%{$search}%")
+                    )
+                    ->latest()
+                    ->paginate(6)
+                    ->withQueryString()
+                    ->through(fn ($p) => $this->formatProperty($p));
+            }
+        } else {
+            $properties = Property::with('images')
+                ->whereIn('status', ['available', 'reserved'])
+                ->latest()
+                ->paginate(6)
+                ->withQueryString()
+                ->through(fn ($p) => $this->formatProperty($p));
+        }
 
         // NO usar Inertia::merge() aquí — solo funciona en paginación incremental.
         // En carga inicial causaría redirect a /properties.
         return Inertia::render('landing', [
             'properties'  => $properties,
+            'filters'     => $request->only(['search']),
             'canRegister' => false,
         ]);
     }

@@ -18,8 +18,7 @@
         "laravel/tinker": "^3.0",
         "laravel/wayfinder": "^0.1.14",
         "resend/resend-php": "^1.1",
-        "tightenco/ziggy": "^2.6",
-        "typesense/typesense-php": "^6.0"
+        "tightenco/ziggy": "^2.6"
     },
     "require-dev": {
         "fakerphp/faker": "^1.24",
